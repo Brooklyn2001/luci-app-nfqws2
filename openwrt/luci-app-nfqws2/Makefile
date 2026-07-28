@@ -23,7 +23,6 @@ endef
 
 define Build/Prepare
 	$(Build/Prepare/Default)
-	cp -r ../luci-app-nfqws2/* $(PKG_BUILD_DIR)/
 endef
 
 define Build/Compile
