@@ -29,8 +29,13 @@ jobs:
           OPENWRT_APK_PUBLIC_KEY: ${{ secrets.OPENWRT_APK_PUBLIC_KEY }}
           OPENWRT_APK_SECRET_KEY: ${{ secrets.OPENWRT_APK_SECRET_KEY }}
         run: |
-          echo "$OPENWRT_APK_SECRET_KEY" > /builder/private-key.pem
-          echo "$OPENWRT_APK_PUBLIC_KEY" > /builder/public-key.pem
+          printf '%s' "$OPENWRT_APK_SECRET_KEY" > /builder/private-key.pem
+          printf '%s' "$OPENWRT_APK_PUBLIC_KEY" > /builder/public-key.pem
+          echo "=== Private key ==="
+          cat /builder/private-key.pem
+          echo ""
+          echo "=== Public key ==="
+          cat /builder/public-key.pem
 
       - name: Build package
         id: build
