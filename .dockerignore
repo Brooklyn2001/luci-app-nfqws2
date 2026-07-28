@@ -1,0 +1,5 @@
+.git
+.gitignore
+*.ipk
+build/
+*.md

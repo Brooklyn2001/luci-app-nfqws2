@@ -1,0 +1,25 @@
+# Build artifacts
+out/
+build/
+*.apk
+*.ipk
+
+# Keys (NEVER commit these!)
+private-key.pem
+.keys/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/

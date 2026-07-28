@@ -1,0 +1,96 @@
+<style>
+.nfqws2-status-panel {
+	background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px;
+	padding: 16px; margin-bottom: 16px; display: flex;
+	align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.nfqws2-status-indicator {
+	width: 14px; height: 14px; border-radius: 50%;
+	display: inline-block; margin-right: 8px;
+}
+.nfqws2-status-running { background: #4CAF50; box-shadow: 0 0 6px #4CAF50; }
+.nfqws2-status-stopped  { background: #F44336; }
+.nfqws2-status-text { font-size: 15px; font-weight: 500; }
+.nfqws2-status-version { font-size: 12px; color: #888; margin-left: 8px; }
+.nfqws2-buttons { display: flex; gap: 8px; margin-left: auto; }
+</style>
+
+<script type="text/javascript">//<![CDATA[
+function updateStatus() {
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "./status");
+	xhr.onload = function() {
+		try {
+			var data = JSON.parse(xhr.responseText);
+			var indicator = document.getElementById("nfqws2-indicator");
+			var text = document.getElementById("nfqws2-status-text");
+			var version = document.getElementById("nfqws2-version");
+			if (!indicator) return;
+
+			if (data.running) {
+				indicator.className = "nfqws2-status-indicator nfqws2-status-running";
+				text.textContent = "%%unescaped:translate('Running')%%";
+			} else {
+				indicator.className = "nfqws2-status-indicator nfqws2-status-stopped";
+				text.textContent = "%%unescaped:translate('Stopped')%%";
+			}
+			if (data.version && version) {
+				version.textContent = "v" + data.version;
+			}
+		} catch(e) {}
+	};
+	xhr.send();
+}
+
+function serviceAction(action) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "./action");
+	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xhr.onload = function() {
+		setTimeout(updateStatus, 1000);
+	};
+	xhr.send("action=" + action);
+}
+
+function updateService() {
+	if (!confirm("%%unescaped:translate('Update nfqws2 package?')%%")) return;
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", "./upgrade");
+	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xhr.onload = function() {
+		try {
+			var data = JSON.parse(xhr.responseText);
+			alert(data.output.join("\n"));
+			setTimeout(updateStatus, 2000);
+		} catch(e) {}
+	};
+	xhr.send();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+	updateStatus();
+	setInterval(updateStatus, 10000);
+});
+//]]>
+</script>
+
+<div class="nfqws2-status-panel">
+	<span class="nfqws2-status-indicator nfqws2-status-stopped" id="nfqws2-indicator"></span>
+	<span class="nfqws2-status-text" id="nfqws2-status-text">%%unescaped:translate('Checking...')%%</span>
+	<span class="nfqws2-status-version" id="nfqws2-version"></span>
+
+	<div class="nfqws2-buttons">
+		<button class="btn cbi-button cbi-button-apply" onclick="serviceAction('start')">
+			%%unescaped:translate('Start')%%
+		</button>
+		<button class="btn cbi-button cbi-button-remove" onclick="serviceAction('stop')">
+			%%unescaped:translate('Stop')%%
+		</button>
+		<button class="btn cbi-button cbi-button-reload" onclick="serviceAction('restart')">
+			%%unescaped:translate('Restart')%%
+		</button>
+		<button class="btn cbi-button" onclick="updateService()">
+			%%unescaped:translate('Update')%%
+		</button>
+	</div>
+</div>
