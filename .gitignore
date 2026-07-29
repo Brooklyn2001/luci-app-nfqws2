@@ -23,3 +23,9 @@ __pycache__/
 *.pyc
 *.pyo
 .venv/
+
+# LLM / AI tooling
+AGENTS.md
+generate_signify_keys.py
+public-key.pem
+signify.exe
