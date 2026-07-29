@@ -25,6 +25,20 @@ for mode in ["r:gz", "r"]:
         print("  %s failed: %s" % (mode, e))
         continue
 
+if "control_data" not in dir():
+    print("  Could not open APK as tar/tar.gz, checking magic bytes...")
+    with open(apk_path, "rb") as f:
+        magic = f.read(16)
+    print("  Magic: %s" % magic.hex())
+    print("  First 100 bytes as text:")
+    with open(apk_path, "rb") as f:
+        head = f.read(100)
+    for i in range(0, len(head), 16):
+        chunk = head[i:i+16]
+        hex_part = " ".join("%02x" % b for b in chunk)
+        ascii_part = "".join(chr(b) if 32 <= b < 127 else "." for b in chunk)
+        print("    %04x: %-48s  %s" % (i, hex_part, ascii_part))
+
 ctl_tar = tarfile.open(fileobj=io.BytesIO(control_data))
 control_file = ctl_tar.extractfile("control")
 control_text = control_file.read().decode()
