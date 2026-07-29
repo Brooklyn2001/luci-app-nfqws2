@@ -12,9 +12,18 @@ with open(apk_path, "rb") as f:
 size = len(data)
 sha256 = hashlib.sha256(data).hexdigest()
 
-tf = tarfile.open(apk_path, "r")
-control_data = tf.extractfile("control.tar.gz").read()
-tf.close()
+for mode in ["r:gz", "r"]:
+    try:
+        tf = tarfile.open(apk_path, mode)
+        print("  APK opened as %s, members:" % mode)
+        for m in tf.getmembers():
+            print("    %s" % m.name)
+        control_data = tf.extractfile("control.tar.gz").read()
+        tf.close()
+        break
+    except Exception as e:
+        print("  %s failed: %s" % (mode, e))
+        continue
 
 ctl_tar = tarfile.open(fileobj=io.BytesIO(control_data))
 control_file = ctl_tar.extractfile("control")
