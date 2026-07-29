@@ -48,18 +48,27 @@ jobs:
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/luci-app-nfqws2/compile V=s
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/index V=s
 
+      - name: Find and upload APK
+        if: steps.build.outcome == 'success'
+        run: |
+          echo "=== All APKs ==="
+          find /builder/bin -name "*.apk" -ls
+          APK_PATH=$(find /builder/bin -name "luci-app-nfqws2*.apk" -type f | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: APK not found!"
+            exit 1
+          fi
+          echo "Found APK: $APK_PATH"
+          mkdir -p /tmp/apk-out
+          cp "$APK_PATH" /tmp/apk-out/luci-app-nfqws2.apk
+
       - name: Upload APK artifact
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: luci-app-nfqws2-apk
-          path: /builder/bin/packages/*/nfqws2/luci-app-nfqws2_*
+          path: /tmp/apk-out/luci-app-nfqws2.apk
           if-no-files-found: error
-
-      - name: List built packages
-        run: |
-          echo "=== Built packages ==="
-          find /builder/bin/packages -name "luci-app-nfqws2*" -ls
 
   create-release:
     needs: build-openwrt
