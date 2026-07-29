@@ -46,7 +46,7 @@ function action_status()
 		f:close()
 	end
 
-	f = io.popen([[opkg status nfqws2-keenetic 2>/dev/null | awk -F': ' '/^Version:/ {print $2}']])
+	f = io.popen([[apk list --installed nfqws2-keenetic 2>/dev/null | awk '{print $2}' | sed 's/-r[0-9]*$//']])
 	if f then
 		ret.version = f:read("*a"):trim()
 		f:close()
@@ -278,7 +278,7 @@ end
 
 function action_upgrade()
 	local output = {}
-	local f = io.popen("opkg update 2>&1 && opkg upgrade nfqws2-keenetic 2>&1")
+	local f = io.popen("apk --update-cache upgrade nfqws2-keenetic 2>&1")
 	if f then
 		for line in f:lines() do
 			table.insert(output, line)
