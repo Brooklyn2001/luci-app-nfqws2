@@ -1,10 +1,10 @@
 # luci-app-nfqws2
 
-Web-интерфейс LuCI для управления **nfqws2** — утилитой обхода DPI (Deep Packet Inspection) на роутерах с OpenWRT.
+Web-интерфейс LuCI для управления **[nfqws2](https://github.com/nfqws/nfqws2-keenetic)** — утилитой обхода DPI (Deep Packet Inspection) на роутерах с OpenWRT.
 
-nfqws2 перехватывает трафик через Netfilter NFQUEUE и применяет техники десинхронизации пакетов на основе библиотеки [zapret](https://github.com/bol-van/zapret), позволяя обойти блокировки провайдера.
+nfqws2 перехватывает трафик через Netfilter NFQUEUE и применяет техники десинхронизации пакетов, позволяя обойти блокировки провайдера. Основное приложение — **[nfqws2-keenetic](https://github.com/nfqws/nfqws2-keenetic)** ([@nfqws](https://github.com/nfqws)), пакет с бинарником, конфигурацией и скриптами запуска.
 
-Этот пакет — только интерфейс управления. Сам бинарник `nfqws2` устанавливается отдельно (например, пакет `nfqws2-keenetic`).
+Этот пакет — **веб-интерфейс** для удобного управления nfqws2 через LuCI: настройка параметров, редактирование списков доменов, просмотр логов, управление службой. Не содержит бинарник nfqws2 — он устанавливается отдельно.
 
 ## Возможности
 
@@ -31,7 +31,7 @@ apk --update-cache add luci-app-nfqws2
 ## Требования
 
 - OpenWRT 25.12.2+ (ramips/mt7621, mipsel)
-- Бинарник nfqws2 (пакет `nfqws2-keenetic`)
+- Пакет **[nfqws2-keenetic](https://github.com/nfqws/nfqws2-keenetic)** (бинарник, конфиги, скрипты)
 - Установленный пакет `luci`
 
 ## Обновление
@@ -70,5 +70,7 @@ make package/luci-app-nfqws2/compile V=s
 
 ## Ссылки
 
-- [nfqws2 (zapret-based DPI bypass)](https://github.com/bol-van/zapret)
-- [Issues и обсуждения](https://github.com/Brooklyn2001/luci-app-nfqws2/issues)
+- [nfqws2-keenetic — основное приложение](https://github.com/nfqws/nfqws2-keenetic)
+- [zapret — anti-DPI библиотека](https://github.com/bol-van/zapret)
+- [Telegram-чат nfqws](https://t.me/nfqws)
+- [Issues luci-app-nfqws2](https://github.com/Brooklyn2001/luci-app-nfqws2/issues)
