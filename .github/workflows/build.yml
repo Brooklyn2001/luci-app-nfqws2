@@ -66,8 +66,18 @@ jobs:
           cp "$APK_PATH" /tmp/apk-out/luci-app-nfqws2.apk
           cp /builder/public-key.pem /tmp/apk-out/luci-app-nfqws2.pem
           cd /tmp/apk-out
-          cp "$GITHUB_WORKSPACE/scripts/generate_adb.py" .
-          /builder/staging_dir/host/bin/python3 generate_adb.py luci-app-nfqws2.apk packages.adb
+
+          echo "=== Looking for SDK packages.adb ==="
+          find /builder/bin -name "packages.adb" -ls
+          ADB_PATH=$(find /builder/bin/packages -path "*/nfqws2/packages.adb" -type f | head -1)
+          if [ -n "$ADB_PATH" ]; then
+            echo "Found SDK packages.adb: $ADB_PATH"
+            cp "$ADB_PATH" packages.adb
+          else
+            echo "No SDK packages.adb found, generating via python..."
+            cp "$GITHUB_WORKSPACE/scripts/generate_adb.py" .
+            /builder/staging_dir/host/bin/python3 generate_adb.py luci-app-nfqws2.apk packages.adb
+          fi
           /builder/staging_dir/host/bin/apk sign --private-key /builder/private-key.pem packages.adb
 
       - name: Upload artifact

@@ -12,32 +12,24 @@ with open(apk_path, "rb") as f:
 size = len(data)
 sha256 = hashlib.sha256(data).hexdigest()
 
-for mode in ["r:gz", "r"]:
-    try:
-        tf = tarfile.open(apk_path, mode)
-        print("  APK opened as %s, members:" % mode)
-        for m in tf.getmembers():
-            print("    %s" % m.name)
-        control_data = tf.extractfile("control.tar.gz").read()
-        tf.close()
-        break
-    except Exception as e:
-        print("  %s failed: %s" % (mode, e))
-        continue
+# APK v3 (ADBd) format — read raw bytes to parse
+# Check if it's zstd compressed (magic: 28 05)
+with open(apk_path, "rb") as f:
+    magic = f.read(4)
+print("  APK magic: %s" % magic.hex())
 
-if "control_data" not in dir():
-    print("  Could not open APK as tar/tar.gz, checking magic bytes...")
-    with open(apk_path, "rb") as f:
-        magic = f.read(16)
-    print("  Magic: %s" % magic.hex())
-    print("  First 100 bytes as text:")
-    with open(apk_path, "rb") as f:
-        head = f.read(100)
-    for i in range(0, len(head), 16):
-        chunk = head[i:i+16]
-        hex_part = " ".join("%02x" % b for b in chunk)
-        ascii_part = "".join(chr(b) if 32 <= b < 127 else "." for b in chunk)
-        print("    %04x: %-48s  %s" % (i, hex_part, ascii_part))
+# Try to find control data by scanning for known APK v3 structure
+# APK v3 structure: [manifest + control + data + signature]
+# Read the whole file and search for control.tar.gz or control/
+with open(apk_path, "rb") as f:
+    data = f.read()
+
+# Look for "control" string occurrences
+import re
+for m in re.finditer(b'control', data):
+    start = max(0, m.start() - 20)
+    end = min(len(data), m.end() + 40)
+    print("  Found 'control' at offset %d: %s" % (m.start(), data[start:end].hex()))
 
 ctl_tar = tarfile.open(fileobj=io.BytesIO(control_data))
 control_file = ctl_tar.extractfile("control")
