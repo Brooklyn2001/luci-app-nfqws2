@@ -1,50 +1,74 @@
-# Luci-app-nfqws2 — APK Package Build
+# luci-app-nfqws2
 
-## Быстрый старт
+Web-интерфейс LuCI для управления **nfqws2** — утилитой обхода DPI (Deep Packet Inspection) на роутерах с OpenWRT.
 
-1. Сгенерировать ключи:
-   ```bash
-   bash generate-keys.sh
-   ```
+nfqws2 перехватывает трафик через Netfilter NFQUEUE и применяет техники десинхронизации пакетов на основе библиотеки [zapret](https://github.com/bol-van/zapret), позволяя обойти блокировки провайдера.
 
-2. Добавить ключи в GitHub Secrets:
-   - `OPENWRT_APK_PUBLIC_KEY` — содержимое `public-key.pem`
-   - `OPENWRT_APK_SECRET_KEY` — содержимое `private-key.pem`
+Этот пакет — только интерфейс управления. Сам бинарник `nfqws2` устанавливается отдельно (например, пакет `nfqws2-keenetic`).
 
-3. Запустить сборку в GitHub Actions (вручную или по push)
+## Возможности
 
-4. Скачать APK из релизов
+- **Настройка параметров** — интерфейс, порты, режим работы, стратегии десинхронизации через LuCI
+- **Редактор списков доменов** — inline-редактор с проверкой доступности доменов и удалением дубликатов
+- **Просмотр логов** — веб-интерфейс для `.log` файлов nfqws2
+- **Редактор Lua-скриптов** — inline-редактор для скриптов десинхронизации
+- **Управление службой** — запуск, остановка, перезапуск и обновление прямо из интерфейса
 
-## Структура проекта
+Доступен в веб-интерфейсе OpenWRT по адресу **Сервисы → NFQWS2**.
 
+## Установка на OpenWRT
+
+Пакет доступен как подписанный репозиторий APK. Установка одним командным блоком:
+
+```bash
+wget -O "/etc/apk/keys/luci-app-nfqws2.pem" "https://brooklyn2001.github.io/luci-app-nfqws2/luci-app-nfqws2.pem"
+echo "https://brooklyn2001.github.io/luci-app-nfqws2/packages.adb" > /etc/apk/repositories.d/luci-app-nfqws2.list
+apk --update-cache add luci-app-nfqws2
 ```
-├── .github/workflows/build.yml  — GitHub Actions workflow
-├── openwrt/
-│   └── luci-app-nfqws2/
-│       └── Makefile              — OpenWRT package definition
-├── luci-app-nfqws2/             — LuCI application
-├── generate-keys.sh             — скрипт генерации ключей
-├── VERSION                      — версия пакета
-└── README.md                   — этот файл
-```
+
+После установки перезагрузите LuCI или выполните `/etc/init.d/uhttpd restart`.
 
 ## Требования
 
-- GitHub Actions (бесплатно для публичных репозиториев)
-- signify (для генерации ключей)
+- OpenWRT 25.12.2+ (ramips/mt7621, mipsel)
+- Бинарник nfqws2 (пакет `nfqws2-keenetic`)
+- Установленный пакет `luci`
 
-## Установка на роутер
+## Обновление
 
-1. Скопировать публичный ключ на роутер:
-   ```bash
-   scp public-key.pem root@<router>:/etc/apk/keys/luci-app-nfqws2.pem
-   ```
+В веб-интерфейсе на странице **Сервисы → NFQWS2 → Настройка** доступна кнопка **Обновить**, которая обновляет пакет nfqws2 через opkg.
 
-2. Установить APK:
-   ```bash
-   apk add --allow-untrusted luci-app-nfqws2.apk
-   ```
+Сам интерфейс обновляется стандартным способом через `apk upgrade luci-app-nfqws2`.
 
-## Обновление версии
+## Структура пакета
 
-Изменить `VERSION` файл и сделать commit. Версия автоматически подхватится в сборке.
+```
+luasrc/controller/nfqws2.lua   — маршрутизация и RPC-эндпоинты
+luasrc/model/cbi/nfqws2/       — страницы LuCI (config, lists, logs, scripts)
+luasrc/view/nfqws2/status.htm  — виджет статуса службы
+root/etc/config/nfqws2         — конфигурация UCI по умолчанию
+root/etc/init.d/nfqws2         — procd-скрипт службы
+root/usr/share/nfqws2/         — генератор конфига и вспомогательные скрипты
+```
+
+## Сборка
+
+Пакет собирается автоматически через GitHub Actions при запуске workflow «Build and publish APK». APK подписывается EC secp256k1 ключом и публикуется как GitHub Release и на GitHub Pages.
+
+Для локальной сборки используйте OpenWRT SDK:
+
+```bash
+./setup.sh
+echo "src-link nfqws2 /path/to/luci-app-nfqws2/openwrt" > feeds.conf
+./scripts/feeds update nfqws2
+./scripts/feeds install -a -p nfqws2
+make defconfig
+make package/luci-app-nfqws2/compile V=s
+```
+
+Версия пакета задаётся файлом `VERSION`.
+
+## Ссылки
+
+- [nfqws2 (zapret-based DPI bypass)](https://github.com/bol-van/zapret)
+- [Issues и обсуждения](https://github.com/Brooklyn2001/luci-app-nfqws2/issues)
