@@ -259,6 +259,11 @@ function action_checkdomain()
 		return
 	end
 
+	if not luci.fs.access("/usr/bin/curl") then
+		json_response({status = 0, result = false, note = "curl not installed"})
+		return
+	end
+
 	local f = io.popen(string.format(
 		'curl -sIL --max-time 5 --max-redirs 5 "%s" 2>/dev/null | head -1', url))
 	local result = false

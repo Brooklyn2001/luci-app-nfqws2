@@ -12,7 +12,7 @@ define Package/luci-app-nfqws2
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  DEPENDS:=+luci-base +curl
+  DEPENDS:=+luci-base
   PKGARCH:=all
   URL:=https://github.com/nfqws2/nfqws2-openwrt
 endef
