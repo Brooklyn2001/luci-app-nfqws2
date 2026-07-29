@@ -34,6 +34,12 @@ jobs:
           printf '%s' "$OPENWRT_APK_SECRET_KEY" > /builder/private-key.pem
           printf '%s' "$OPENWRT_APK_PUBLIC_KEY" > /builder/public-key.pem
 
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(cat $GITHUB_WORKSPACE/VERSION)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Build package
         id: build
         working-directory: /builder
@@ -72,7 +78,7 @@ jobs:
     needs: build-openwrt
     runs-on: ubuntu-22.04
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
 
@@ -106,3 +112,11 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Creating release v${VERSION}"
+          gh release create "v${VERSION}" pages/luci-app-nfqws2.apk --title "v${VERSION}" --notes "Release v${VERSION}" --prerelease
