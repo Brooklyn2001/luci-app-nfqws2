@@ -34,6 +34,16 @@ jobs:
           printf '%s' "$OPENWRT_APK_SECRET_KEY" > /builder/private-key.pem
           printf '%s' "$OPENWRT_APK_PUBLIC_KEY" > /builder/public-key.pem
 
+          # Install our key into SDK so it signs APK and packages.adb with our key
+          mkdir -p /builder/staging_dir/host/apk-keys
+          cp /builder/public-key.pem /builder/staging_dir/host/apk-keys/luci-app-nfqws2.pem
+
+          # Also place in target-specific key directory
+          find /builder/staging_dir/targets -type d -name "apk" | while read d; do
+            mkdir -p "$d/keys"
+            cp /builder/public-key.pem "$d/keys/luci-app-nfqws2.pem"
+          done
+
       - name: Get version
         id: version
         run: |

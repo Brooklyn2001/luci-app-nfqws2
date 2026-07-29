@@ -31,6 +31,8 @@ endef
 
 define Package/luci-app-nfqws2/install
 	$(CP) $(PKG_BUILD_DIR)/root/* $(1)/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
 endef
 
 define Package/luci-app-nfqws2/conffiles
