@@ -51,7 +51,7 @@ jobs:
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/luci-app-nfqws2/compile V=s
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/index V=s
 
-      - name: Collect APK and keys
+      - name: Collect APK, keys and index
         if: steps.build.outcome == 'success'
         run: |
           echo "=== All APKs ==="
@@ -65,6 +65,8 @@ jobs:
           mkdir -p /tmp/apk-out
           cp "$APK_PATH" /tmp/apk-out/luci-app-nfqws2.apk
           cp /builder/public-key.pem /tmp/apk-out/luci-app-nfqws2.pem
+          cd /tmp/apk-out
+          /builder/staging_dir/host/bin/apk index -o packages.adb *.apk
 
       - name: Upload artifact
         if: steps.build.outcome == 'success'
@@ -95,11 +97,6 @@ jobs:
         with:
           name: luci-app-nfqws2-repo
           path: pages
-
-      - name: Build APK index
-        run: |
-          cd pages
-          apk index -o packages.adb *.apk
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
