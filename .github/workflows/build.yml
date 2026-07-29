@@ -66,7 +66,8 @@ jobs:
           cp "$APK_PATH" /tmp/apk-out/luci-app-nfqws2.apk
           cp /builder/public-key.pem /tmp/apk-out/luci-app-nfqws2.pem
           cd /tmp/apk-out
-          /builder/staging_dir/host/bin/apk index --sign /builder/private-key.pem -o packages.adb *.apk
+          /builder/staging_dir/host/bin/apk index -o packages.adb *.apk
+          /builder/staging_dir/host/bin/apk sign --private-key /builder/private-key.pem packages.adb
 
       - name: Upload artifact
         if: steps.build.outcome == 'success'
