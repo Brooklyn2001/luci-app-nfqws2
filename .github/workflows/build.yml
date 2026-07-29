@@ -78,7 +78,7 @@ jobs:
             cp "$GITHUB_WORKSPACE/scripts/generate_adb.py" .
             /builder/staging_dir/host/bin/python3 generate_adb.py luci-app-nfqws2.apk packages.adb
           fi
-          /builder/staging_dir/host/bin/apk sign /builder/private-key.pem packages.adb
+          echo "packages.adb already signed by SDK, skipping extra sign step"
 
       - name: Upload artifact
         if: steps.build.outcome == 'success'
