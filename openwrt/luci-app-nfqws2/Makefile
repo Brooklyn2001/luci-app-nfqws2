@@ -33,9 +33,18 @@ define Package/luci-app-nfqws2/install
 	$(CP) $(PKG_BUILD_DIR)/root/* $(1)/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
-	$(CP) $(PKG_BUILD_DIR)/luasrc/* $(1)/usr/lib/lua/luci/
-	$(CP) $(PKG_BUILD_DIR)/po/* $(1)/usr/lib/lua/luci/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
+	$(CP) $(PKG_BUILD_DIR)/luasrc/model/cbi/* $(1)/usr/lib/lua/luci/model/cbi/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
+	$(CP) $(PKG_BUILD_DIR)/po/* $(1)/usr/lib/lua/luci/i18n/
+	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
+	$(CP) $(PKG_BUILD_DIR)/root/usr/share/luci/menu.d/*.json $(1)/usr/share/luci/menu.d/
+	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/controller
+	$(CP) $(PKG_BUILD_DIR)/ucode/controller/*.uc $(1)/usr/share/ucode/luci/controller/
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(CP) $(PKG_BUILD_DIR)/root/usr/share/rpcd/acl.d/*.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/luci-app-nfqws2/conffiles
