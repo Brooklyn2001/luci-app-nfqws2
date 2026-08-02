@@ -12,7 +12,7 @@ define Package/luci-app-nfqws2
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  DEPENDS:=+luci-base
+  DEPENDS:=+luci-base +nfqws2-keenetic
   PKGARCH:=all
   URL:=https://github.com/nfqws2/nfqws2-openwrt
 endef
@@ -51,6 +51,20 @@ endef
 
 define Package/luci-app-nfqws2/conffiles
 /etc/config/nfqws2
+endef
+
+define Package/luci-app-nfqws2/postinst
+#!/bin/sh
+[ -e /etc/init.d/nfqws2 ] || ln -sf /etc/init.d/nfqws2-keenetic /etc/init.d/nfqws2
+[ -e /etc/config/nfqws2 ] || {
+    cat <<'EOF' > /etc/config/nfqws2
+config nfqws2 'general'
+    option enabled '0'
+    option port '443'
+    option bind_addr '0.0.0.0'
+EOF
+}
+exit 0
 endef
 
 $(eval $(call BuildPackage,luci-app-nfqws2))
