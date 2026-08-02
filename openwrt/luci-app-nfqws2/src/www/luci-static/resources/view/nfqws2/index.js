@@ -1,7 +1,5 @@
 'use strict';
 'require view';
-'require ui';
-'require form';
 
 const CGI = '/cgi-bin/nfqws2.sh';
 
@@ -56,8 +54,7 @@ return view.extend({
 
 	render: function() {
 		var self = this;
-
-		ui.addStyle([
+		var css = [
 			'.nfqws2-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 1em; }',
 			'.nfqws2-tab { padding: 8px 16px; cursor: pointer; border: 1px solid transparent; border-bottom: none; margin-bottom: -2px; background: #f5f5f5; border-radius: 4px 4px 0 0; margin-right: 2px; font-size: 13px; }',
 			'.nfqws2-tab.active { background: #fff; border-color: #ddd; font-weight: bold; border-bottom: 2px solid #fff; }',
@@ -84,7 +81,7 @@ return view.extend({
 			'.nfqws2-cfg-table tr:nth-child(even) { background: #f9f9f9; }',
 			'.nfqws2-cfg-label { width: 220px; font-weight: 500; }',
 			'.nfqws2-cfg-desc { font-size: 11px; color: #888; margin-top: 2px; }',
-		].join('\n'));
+		].join('\n');
 
 		function showMsg(id, text, type) {
 			var el = document.getElementById(id);
@@ -435,6 +432,7 @@ return view.extend({
 
 		/* ===== BUILD DOM ===== */
 		var dom = E('div', [
+			E('style', { 'type': 'text/css' }, [ css ]),
 			/* Tabs */
 			E('div', { 'class': 'nfqws2-tabs' }, [
 				E('div', { 'class': 'nfqws2-tab', 'id': 'tab-config', 'click': function() { switchTab('config'); } }, [ _('Configuration') ]),
