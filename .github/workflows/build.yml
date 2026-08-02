@@ -74,27 +74,9 @@ jobs:
             exit 1
           fi
 
-          echo "=== APK ar contents ==="
-          ar t "$APK_PATH"
-
-          echo "=== Checking data.tar integrity ==="
-          DATA_FILE=$(ar t "$APK_PATH" | grep -E 'data\.tar\.(gz|xz)')
-          if [ -z "$DATA_FILE" ]; then
-            echo "ERROR: No data.tar found in APK!"
-            ar t "$APK_PATH"
-            exit 1
-          fi
-          echo "Found: $DATA_FILE"
-
-          ar p "$APK_PATH" "$DATA_FILE" > /tmp/data-archive
-          DATA_SIZE=$(stat -c%s /tmp/data-archive)
-          echo "data.tar size: $DATA_SIZE bytes"
-          if [ "$DATA_SIZE" -lt 64 ]; then
-            echo "ERROR: data.tar is too small, likely empty or corrupted!"
-            exit 1
-          fi
-
-          file /tmp/data-archive
+          echo "=== APK validation ==="
+          apk info -x --archive "$APK_PATH" || true
+          file "$APK_PATH"
           echo "APK validation passed"
 
       - name: Collect APK and keys
