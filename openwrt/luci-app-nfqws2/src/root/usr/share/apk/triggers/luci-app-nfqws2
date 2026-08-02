@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ "$1" = "trigger" ]; then
+	rm -rf /tmp/luci-modulecache
+	/etc/init.d/uhttpd restart 2>/dev/null || /etc/init.d/lighttpd restart 2>/dev/null
+fi
+exit 0

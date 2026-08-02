@@ -45,6 +45,8 @@ define Package/luci-app-nfqws2/install
 	$(CP) $(PKG_BUILD_DIR)/ucode/controller/*.uc $(1)/usr/share/ucode/luci/controller/
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(CP) $(PKG_BUILD_DIR)/root/usr/share/rpcd/acl.d/*.json $(1)/usr/share/rpcd/acl.d/
+	$(INSTALL_DIR) $(1)/usr/share/apk/triggers
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/usr/share/apk/triggers/luci-app-nfqws2 $(1)/usr/share/apk/triggers/luci-app-nfqws2
 endef
 
 define Package/luci-app-nfqws2/conffiles
