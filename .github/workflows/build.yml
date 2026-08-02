@@ -74,8 +74,8 @@ jobs:
             exit 1
           fi
 
-          echo "=== APK validation ==="
-          apk info -x --archive "$APK_PATH" || true
+          echo "=== APK contents ==="
+          apk info --archive --list "$APK_PATH" || true
           file "$APK_PATH"
           echo "APK validation passed"
 
