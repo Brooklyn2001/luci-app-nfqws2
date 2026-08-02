@@ -1,3 +1,20 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFQWS2</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background: #fafafa; color: #333; }
+h3 { margin: 0 0 12px; }
+.btn { padding: 6px 14px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; background: #fff; font-size: 13px; }
+.cbi-button-apply { background: #4CAF50; color: #fff; border-color: #4CAF50; }
+.cbi-button-remove { background: #F44336; color: #fff; border-color: #F44336; }
+.cbi-button-reload { background: #2196F3; color: #fff; border-color: #2196F3; }
+.cbi-button-add { background: #FF9800; color: #fff; border-color: #FF9800; }
+</style>
+</head>
+<body>
 <style>
 .nfqws2-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 1em; }
 .nfqws2-tab {
@@ -49,17 +66,17 @@ select { box-sizing: border-box; }
 </style>
 
 <script type="text/javascript">//<![CDATA[
-var BASE = "./";
+var CGI = "/cgi-bin/nfqws2.sh";
 
 function rpc(action, params, cb) {
 	var xhr = new XMLHttpRequest();
-	xhr.open("POST", BASE + action);
-	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xhr.open("POST", CGI);
+	xhr.setRequestHeader("Content-Type", "application/json");
 	xhr.onload = function() {
 		try { cb(JSON.parse(xhr.responseText)); }
 		catch(e) { cb(null); }
 	};
-	xhr.send(params ? Object.keys(params).map(function(k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }).join("&") : "");
+	xhr.send(JSON.stringify({action: action, params: params || {}}));
 }
 
 function switchTab(name) {
@@ -101,7 +118,7 @@ function updateStatus() {
 }
 
 function svc(action) {
-	rpc("action", { action: action }, function() { setTimeout(updateStatus, 1000); });
+	rpc("service", { action: action }, function() { setTimeout(updateStatus, 1000); });
 }
 
 function doUpgrade() {
@@ -462,9 +479,11 @@ document.addEventListener("DOMContentLoaded", function() {
 		</table>
 		<div style="margin-top: 12px;">
 			<button class="btn cbi-button cbi-button-apply" onclick="saveConfig()">Save Configuration</button>
-		</div>
 	</div>
 </div>
+</body>
+</html>
+
 
 <!-- Lists Panel -->
 <div class="nfqws2-panel" id="panel-lists">
