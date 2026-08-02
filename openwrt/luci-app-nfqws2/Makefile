@@ -33,10 +33,10 @@ define Package/luci-app-nfqws2/install
 	$(CP) $(CURDIR)/src/www/nfqws2/* $(1)/www/nfqws2/
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) $(CURDIR)/src/www/cgi-bin/nfqws2.sh $(1)/www/cgi-bin/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) $(CURDIR)/src/root/usr/lib/lua/luci/controller/nfqws2.lua $(1)/usr/lib/lua/luci/controller/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/nfqws2
-	$(CP) $(CURDIR)/src/root/usr/lib/lua/luci/view/nfqws2/index.htm $(1)/usr/lib/lua/luci/view/nfqws2/
+	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/nfqws2
+	$(CP) $(CURDIR)/src/www/luci-static/resources/view/nfqws2/* $(1)/www/luci-static/resources/view/nfqws2/
+	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
+	$(CP) $(CURDIR)/src/root/usr/share/luci/menu.d/luci-app-nfqws2.json $(1)/usr/share/luci/menu.d/
 	$(INSTALL_DIR) $(1)/etc/config
 	$(CP) $(CURDIR)/src/root/etc/config/nfqws2 $(1)/etc/config/nfqws2
 	$(INSTALL_DIR) $(1)/usr/share/apk/triggers

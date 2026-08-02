@@ -1,0 +1,10 @@
+{
+	"admin/services/nfqws2": {
+		"title": "NFQWS2",
+		"order": 60,
+		"action": {
+			"type": "view",
+			"path": "nfqws2/index"
+		}
+	}
+}
