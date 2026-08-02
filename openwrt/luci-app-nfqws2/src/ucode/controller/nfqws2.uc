@@ -7,6 +7,19 @@ function json_response(data) {
 	http.write_json(data);
 }
 
+function action_index() {
+	const path = '/usr/lib/luci/view/nfqws2/index.htm';
+	const fd = open(path, 'r');
+	if (fd) {
+		http.prepare_content('text/html; charset=UTF-8');
+		http.write(read(fd));
+		fd.close();
+	} else {
+		http.prepare_content('text/plain');
+		http.write('Page not found');
+	}
+}
+
 function action_status() {
 	const fs = {};
 	let ret = { running: false, nfqws2: !!stat('/usr/bin/nfqws2') };
@@ -278,6 +291,7 @@ function action_ucichanges() {
 }
 
 return {
+	action_index,
 	action_status,
 	action_service,
 	action_filenames,

@@ -33,8 +33,8 @@ define Package/luci-app-nfqws2/install
 	$(CP) $(PKG_BUILD_DIR)/root/* $(1)/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/nfqws2
-	$(CP) $(PKG_BUILD_DIR)/root/usr/lib/luci/view/nfqws2/index.htm $(1)/usr/lib/lua/luci/view/nfqws2/
+	$(INSTALL_DIR) $(1)/usr/lib/luci/view/nfqws2
+	$(CP) $(PKG_BUILD_DIR)/root/usr/lib/luci/view/nfqws2/index.htm $(1)/usr/lib/luci/view/nfqws2/
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
 	$(CP) $(PKG_BUILD_DIR)/root/usr/share/luci/menu.d/*.json $(1)/usr/share/luci/menu.d/
 	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/controller
