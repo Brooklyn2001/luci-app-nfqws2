@@ -1,0 +1,518 @@
+<style>
+.nfqws2-tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 1em; }
+.nfqws2-tab {
+	padding: 8px 16px; cursor: pointer; border: 1px solid transparent;
+	border-bottom: none; margin-bottom: -2px; background: #f5f5f5;
+	border-radius: 4px 4px 0 0; margin-right: 2px; font-size: 13px;
+}
+.nfqws2-tab.active { background: #fff; border-color: #ddd; font-weight: bold; border-bottom: 2px solid #fff; }
+.nfqws2-tab:hover { background: #e8e8e8; }
+.nfqws2-panel { display: none; }
+.nfqws2-panel.active { display: block; }
+.nfqws2-status-panel {
+	background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px;
+	padding: 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.nfqws2-status-indicator { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.nfqws2-status-running { background: #4CAF50; box-shadow: 0 0 6px #4CAF50; }
+.nfqws2-status-stopped { background: #F44336; }
+.nfqws2-status-text { font-size: 15px; font-weight: 500; }
+.nfqws2-status-version { font-size: 12px; color: #888; margin-left: 8px; }
+.nfqws2-buttons { display: flex; gap: 8px; margin-left: auto; }
+.nfqws2-toolbar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+.nfqws2-toolbar .file-select { flex: 1; min-width: 200px; }
+.nfqws2-status-bar { font-size: 12px; color: #666; margin-left: auto; }
+#nfqws2-editor {
+	font-family: monospace; font-size: 13px; width: 100%; min-height: 400px;
+	resize: vertical; border: 1px solid #ccc; padding: 8px; border-radius: 4px; tab-size: 4;
+}
+#nfqws2-log-editor {
+	font-family: monospace; font-size: 12px; width: 100%; min-height: 500px;
+	resize: vertical; border: 1px solid #ccc; padding: 8px; border-radius: 4px;
+	background: #1e1e1e; color: #d4d4d4; white-space: pre-wrap; word-break: break-all; tab-size: 4;
+}
+#nfqws2-script-editor {
+	font-family: monospace; font-size: 13px; width: 100%; min-height: 400px;
+	resize: vertical; border: 1px solid #ccc; padding: 8px; border-radius: 4px; tab-size: 4;
+}
+.msg-box { display: none; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 13px; }
+.msg-ok { background: #C8E6C9; color: #2E7D32; border: 1px solid #A5D6A7; }
+.msg-err { background: #FFCDD2; color: #C62828; border: 1px solid #EF9A9A; }
+.cbi-section { padding: 10px; }
+textarea { box-sizing: border-box; }
+select { box-sizing: border-box; }
+.nfqws2-cfg-table { width: 100%; border-collapse: collapse; }
+.nfqws2-cfg-table td { padding: 6px 8px; vertical-align: middle; }
+.nfqws2-cfg-table tr:nth-child(even) { background: #f9f9f9; }
+.nfqws2-cfg-label { width: 220px; font-weight: 500; }
+.nfqws2-cfg-desc { font-size: 11px; color: #888; margin-top: 2px; }
+</style>
+
+<script type="text/javascript">//<![CDATA[
+var BASE = "./";
+
+function rpc(action, params, cb) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", BASE + action);
+	xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xhr.onload = function() {
+		try { cb(JSON.parse(xhr.responseText)); }
+		catch(e) { cb(null); }
+	};
+	xhr.send(params ? Object.keys(params).map(function(k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }).join("&") : "");
+}
+
+function switchTab(name) {
+	document.querySelectorAll(".nfqws2-tab").forEach(function(t) { t.classList.remove("active"); });
+	document.querySelectorAll(".nfqws2-panel").forEach(function(p) { p.classList.remove("active"); });
+	document.getElementById("tab-" + name).classList.add("active");
+	document.getElementById("panel-" + name).classList.add("active");
+	if (name === "config") loadConfig();
+	if (name === "lists") loadFileList("list");
+	if (name === "logs") loadLogFileList();
+	if (name === "scripts") loadScriptList();
+}
+
+function msg(el, text, type) {
+	var e = document.getElementById(el);
+	e.textContent = text;
+	e.className = "msg-box msg-" + (type === "ok" ? "ok" : "err");
+	e.style.display = "block";
+	setTimeout(function() { e.style.display = "none"; }, 3000);
+}
+
+/* ===== STATUS ===== */
+function updateStatus() {
+	rpc("status", null, function(data) {
+		if (!data) return;
+		var ind = document.getElementById("nfqws2-indicator");
+		var txt = document.getElementById("nfqws2-status-text");
+		var ver = document.getElementById("nfqws2-version");
+		if (!ind) return;
+		if (data.running) {
+			ind.className = "nfqws2-status-indicator nfqws2-status-running";
+			txt.textContent = "Running";
+		} else {
+			ind.className = "nfqws2-status-indicator nfqws2-status-stopped";
+			txt.textContent = "Stopped";
+		}
+		if (data.version && ver) ver.textContent = "v" + data.version;
+	});
+}
+
+function svc(action) {
+	rpc("action", { action: action }, function() { setTimeout(updateStatus, 1000); });
+}
+
+function doUpgrade() {
+	if (!confirm("Update nfqws2 package?")) return;
+	rpc("upgrade", {}, function(data) {
+		if (data && data.output) alert(data.output.join("\n"));
+		setTimeout(updateStatus, 2000);
+	});
+}
+
+/* ===== CONFIG ===== */
+var configFields = [
+	{ opt: "general.enabled",    label: "Enabled",             type: "flag", desc: "Enable nfqws2 service" },
+	{ opt: "general.isp_interface",  label: "Network Interface", type: "text", desc: "Provider interface, e.g. eth3 or ppp0" },
+	{ opt: "general.tcp_ports",  label: "TCP Ports",         type: "text", desc: "TCP ports for iptables rules" },
+	{ opt: "general.udp_ports",  label: "UDP Ports",         type: "text", desc: "UDP ports for iptables rules" },
+	{ opt: "general.ipv6_enabled",   label: "IPv6 Enabled",      type: "flag", desc: "Process IPv6 connections" },
+	{ opt: "general.policy_name",    label: "Policy Name",       type: "text", desc: "Keenetic access policy name" },
+	{ opt: "general.policy_exclude", label: "Policy Exclude",    type: "flag", desc: "Exclude devices in policy instead of including" },
+	{ opt: "general.nfqueue_num",    label: "NFQueue Number",    type: "text", desc: "Netfilter NFQUEUE queue number" },
+	{ opt: "general.user",         label: "Run As User",       type: "text", desc: "User to run nfqws2 process as" },
+	{ opt: "general.log_level",      label: "Debug Logging",     type: "flag", desc: "Enable debug-level syslog" },
+	{ opt: "general.nfqws_mode",     label: "Working Mode",      type: "select", options: ["MODE_AUTO", "MODE_LIST", "MODE_ALL"], desc: "How nfqws2 selects domains" },
+	{ opt: "strategies.nfqws_base_args",   label: "Startup Arguments",  type: "textarea", rows: 6, desc: "Lua init, blobs, base args" },
+	{ opt: "strategies.nfqws_args",        label: "Base Strategy",      type: "textarea", rows: 10, desc: "HTTPS/HTTP DPI bypass" },
+	{ opt: "strategies.nfqws_args_quic",   label: "QUIC Strategy",      type: "textarea", rows: 5, desc: "QUIC/UDP DPI bypass" },
+	{ opt: "strategies.nfqws_args_udp",    label: "UDP Strategy",       type: "textarea", rows: 8, desc: "UDP: WireGuard, STUN, etc." },
+	{ opt: "strategies.nfqws_args_custom", label: "Custom Strategy",    type: "textarea", rows: 4, desc: "Additional custom strategies" },
+	{ opt: "strategies.nfqws_args_ipset",  label: "IPSET Arguments",    type: "textarea", rows: 2, desc: "IP list paths" },
+];
+
+function loadConfig() {
+	var tbl = document.getElementById("config-body");
+	if (!tbl) return;
+	tbl.innerHTML = "";
+	configFields.forEach(function(f) {
+		rpc("uciget", { option: f.opt }, function(data) {
+			var val = (data && data.value) ? data.value : "";
+			var tr = document.createElement("tr");
+			var tdLabel = document.createElement("td");
+			tdLabel.className = "nfqws2-cfg-label";
+			tdLabel.innerHTML = f.label + '<div class="nfqws2-cfg-desc">' + f.desc + '</div>';
+			var tdVal = document.createElement("td");
+			var input;
+			if (f.type === "flag") {
+				input = document.createElement("select");
+				input.className = "cbi-input-select";
+				["0", "1"].forEach(function(v) {
+					var o = document.createElement("option");
+					o.value = v; o.textContent = v === "1" ? "Yes" : "No";
+					if (val === v) o.selected = true;
+					input.appendChild(o);
+				});
+			} else if (f.type === "select") {
+				input = document.createElement("select");
+				input.className = "cbi-input-select";
+				f.options.forEach(function(v) {
+					var o = document.createElement("option");
+					o.value = v; o.textContent = v;
+					if (val === v) o.selected = true;
+					input.appendChild(o);
+				});
+			} else if (f.type === "textarea") {
+				input = document.createElement("textarea");
+				input.rows = f.rows || 4;
+				input.style.width = "100%";
+				input.style.fontFamily = "monospace";
+				input.style.fontSize = "13px";
+				input.style.padding = "6px";
+				input.style.border = "1px solid #ccc";
+				input.style.borderRadius = "4px";
+				input.value = val;
+			} else {
+				input = document.createElement("input");
+				input.type = "text";
+				input.className = "cbi-input-text";
+				input.value = val;
+				input.style.width = "100%";
+				input.style.boxSizing = "border-box";
+				input.style.padding = "4px 8px";
+			}
+			input.dataset.uciopt = f.opt;
+			tdVal.appendChild(input);
+			tr.appendChild(tdLabel);
+			tr.appendChild(tdVal);
+			tbl.appendChild(tr);
+		});
+	});
+}
+
+function saveConfig() {
+	var saved = 0;
+	var total = configFields.length;
+	var done = 0;
+	document.querySelectorAll("[data-uciopt]").forEach(function(el) {
+		var opt = el.dataset.uciopt;
+		var val = el.value;
+		rpc("uciset", { option: opt, value: val }, function(data) {
+			done++;
+			if (done === total) {
+				msg("cfg-msg", "Configuration saved", "ok");
+			}
+		});
+	});
+}
+
+/* ===== FILE EDITOR (lists, scripts, logs) ===== */
+var currentFile = "";
+var fileDirty = false;
+
+function rpcGetFiles(type, cb) {
+	rpc("filenames", { type: type }, function(data) { cb(data && data.files ? data.files : []); });
+}
+
+function rpcLoadFile(filename, cb) {
+	rpc("filecontent", { filename: filename }, function(data) { cb(data); });
+}
+
+function rpcSaveFile(filename, content, cb) {
+	rpc("savefile", { filename: filename, content: content }, function(data) { cb(data); });
+}
+
+function rpcCreateFile(filename, cb) {
+	rpc("createfile", { filename: filename }, function(data) { cb(data); });
+}
+
+function rpcRemoveFile(filename, cb) {
+	rpc("removefile", { filename: filename }, function(data) { cb(data); });
+}
+
+/* Lists */
+function loadFileList(type) {
+	rpcGetFiles(type || "list", function(files) {
+		var sel = document.getElementById("file-select");
+		if (!sel) return;
+		sel.innerHTML = "";
+		files.forEach(function(f) {
+			var o = document.createElement("option");
+			o.value = f; o.textContent = f;
+			sel.appendChild(o);
+		});
+		if (files.length > 0 && !currentFile) loadEditorFile(files[0]);
+	});
+}
+
+function loadEditorFile(filename) {
+	if (fileDirty && !confirm("Current file is not saved. Really close?")) return;
+	currentFile = filename;
+	fileDirty = false;
+	rpcLoadFile(filename, function(data) {
+		var ed = document.getElementById("nfqws2-editor");
+		if (!ed) return;
+		ed.value = data && data.content ? data.content : "";
+		var st = document.getElementById("file-status");
+		if (st) {
+			var lines = (data && data.content ? data.content : "").split("\n").filter(function(l) { var t = l.trim(); return t && t.charAt(0) !== "#"; });
+			st.textContent = filename + " \u2014 " + lines.length + " entries";
+		}
+	});
+}
+
+function saveEditorFile() {
+	if (!currentFile) return;
+	var content = document.getElementById("nfqws2-editor").value;
+	rpcSaveFile(currentFile, content, function(data) {
+		if (data && data.status === 0) {
+			fileDirty = false;
+			msg("editor-msg", "File saved", "ok");
+		} else {
+			msg("editor-msg", "Failed to save", "err");
+		}
+	});
+}
+
+function createEditorFile() {
+	var name = prompt("Enter filename (e.g., custom.list):");
+	if (!name) return;
+	rpcCreateFile(name, function(data) {
+		if (data && data.status === 0) {
+			loadFileList("list");
+			loadEditorFile(name);
+		} else {
+			msg("editor-msg", "Failed to create file", "err");
+		}
+	});
+}
+
+function removeEditorFile() {
+	if (!currentFile || !confirm("Really delete this file?")) return;
+	rpcRemoveFile(currentFile, function(data) {
+		if (data && data.status === 0) {
+			var ed = document.getElementById("nfqws2-editor");
+			if (ed) ed.value = "";
+			currentFile = "";
+			loadFileList("list");
+		}
+	});
+}
+
+function removeDuplicates() {
+	var ed = document.getElementById("nfqws2-editor");
+	if (!ed) return;
+	var lines = ed.value.split("\n");
+	var seen = {};
+	var unique = [];
+	lines.forEach(function(l) {
+		var t = l.trim().toLowerCase();
+		if (t && t.charAt(0) !== "#" && !seen[t]) { seen[t] = true; unique.push(l); }
+		else if (!t || t.charAt(0) === "#") unique.push(l);
+	});
+	ed.value = unique.join("\n");
+	fileDirty = true;
+}
+
+/* Logs */
+var currentLogFile = "";
+function loadLogFileList() {
+	rpcGetFiles("log", function(files) {
+		var sel = document.getElementById("log-file-select");
+		if (!sel) return;
+		sel.innerHTML = "";
+		files.forEach(function(f) {
+			var o = document.createElement("option");
+			o.value = f; o.textContent = f;
+			sel.appendChild(o);
+		});
+		if (files.length > 0) loadLog(files[0]);
+	});
+}
+
+function loadLog(filename) {
+	currentLogFile = filename;
+	rpcLoadFile(filename, function(data) {
+		var ed = document.getElementById("nfqws2-log-editor");
+		if (ed) ed.value = (data && data.content) ? data.content : "";
+	});
+}
+
+function clearLog() {
+	if (!currentLogFile || !confirm("Really clear this log?")) return;
+	rpcSaveFile(currentLogFile, "", function() {
+		var ed = document.getElementById("nfqws2-log-editor");
+		if (ed) ed.value = "";
+	});
+}
+
+/* Scripts */
+var currentScript = "";
+var scriptDirty = false;
+
+function loadScriptList() {
+	rpcGetFiles("lua", function(files) {
+		var sel = document.getElementById("script-select");
+		if (!sel) return;
+		sel.innerHTML = "";
+		files.forEach(function(f) {
+			var o = document.createElement("option");
+			o.value = f; o.textContent = f;
+			sel.appendChild(o);
+		});
+		if (files.length > 0 && !currentScript) loadScript(files[0]);
+	});
+}
+
+function loadScript(filename) {
+	if (scriptDirty && !confirm("Current file is not saved. Really close?")) return;
+	currentScript = filename;
+	scriptDirty = false;
+	rpcLoadFile(filename, function(data) {
+		var ed = document.getElementById("nfqws2-script-editor");
+		if (ed) ed.value = (data && data.content) ? data.content : "";
+		var st = document.getElementById("script-status");
+		if (st) st.textContent = filename;
+	});
+}
+
+function saveScript() {
+	if (!currentScript) return;
+	var content = document.getElementById("nfqws2-script-editor").value;
+	rpcSaveFile(currentScript, content, function(data) {
+		if (data && data.status === 0) {
+			scriptDirty = false;
+			msg("script-msg", "File saved", "ok");
+		} else {
+			msg("script-msg", "Failed to save", "err");
+		}
+	});
+}
+
+function createScript() {
+	var name = prompt("Enter filename (e.g., custom.lua):");
+	if (!name) return;
+	rpcCreateFile(name, function(data) {
+		if (data && data.status === 0) {
+			loadScriptList();
+			loadScript(name);
+		} else {
+			msg("script-msg", "Failed to create", "err");
+		}
+	});
+}
+
+function removeScript() {
+	if (!currentScript || !confirm("Really delete this file?")) return;
+	rpcRemoveFile(currentScript, function(data) {
+		if (data && data.status === 0) {
+			var ed = document.getElementById("nfqws2-script-editor");
+			if (ed) ed.value = "";
+			currentScript = "";
+			loadScriptList();
+		}
+	});
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+	updateStatus();
+	setInterval(updateStatus, 10000);
+	switchTab("config");
+	document.getElementById("nfqws2-editor").addEventListener("input", function() {
+		fileDirty = true;
+	});
+	document.getElementById("nfqws2-script-editor").addEventListener("input", function() {
+		scriptDirty = true;
+	});
+});
+//]]>
+</script>
+
+<!-- Tabs -->
+<div class="nfqws2-tabs">
+	<div class="nfqws2-tab" id="tab-config" onclick="switchTab('config')">Configuration</div>
+	<div class="nfqws2-tab" id="tab-lists" onclick="switchTab('lists')">Domain Lists</div>
+	<div class="nfqws2-tab" id="tab-logs" onclick="switchTab('logs')">Logs</div>
+	<div class="nfqws2-tab" id="tab-scripts" onclick="switchTab('scripts')">Lua Scripts</div>
+</div>
+
+<!-- Config Panel -->
+<div class="nfqws2-panel" id="panel-config">
+	<div class="nfqws2-status-panel">
+		<span class="nfqws2-status-indicator nfqws2-status-stopped" id="nfqws2-indicator"></span>
+		<span class="nfqws2-status-text" id="nfqws2-status-text">Checking...</span>
+		<span class="nfqws2-status-version" id="nfqws2-version"></span>
+		<div class="nfqws2-buttons">
+			<button class="btn cbi-button cbi-button-apply" onclick="svc('start')">Start</button>
+			<button class="btn cbi-button cbi-button-remove" onclick="svc('stop')">Stop</button>
+			<button class="btn cbi-button cbi-button-reload" onclick="svc('restart')">Restart</button>
+			<button class="btn cbi-button" onclick="doUpgrade()">Update</button>
+		</div>
+	</div>
+
+	<div class="cbi-section">
+		<h3 name="content">General Settings</h3>
+		<div id="cfg-msg" class="msg-box"></div>
+		<table class="nfqws2-cfg-table">
+			<tbody id="config-body">
+				<tr><td colspan="2">Loading...</td></tr>
+			</tbody>
+		</table>
+		<div style="margin-top: 12px;">
+			<button class="btn cbi-button cbi-button-apply" onclick="saveConfig()">Save Configuration</button>
+		</div>
+	</div>
+</div>
+
+<!-- Lists Panel -->
+<div class="nfqws2-panel" id="panel-lists">
+	<div class="cbi-section">
+		<div class="nfqws2-toolbar">
+			<select id="file-select" class="cbi-input-select file-select" onchange="loadEditorFile(this.value)">
+				<option>Loading...</option>
+			</select>
+			<button class="btn cbi-button cbi-button-add" onclick="saveEditorFile()">Save</button>
+			<button class="btn cbi-button cbi-button-add" onclick="createEditorFile()">Create</button>
+			<button class="btn cbi-button cbi-button-remove" onclick="removeEditorFile()">Delete</button>
+			<button class="btn cbi-button" onclick="removeDuplicates()">Remove Duplicates</button>
+			<span class="nfqws2-status-bar" id="file-status"></span>
+		</div>
+		<div id="editor-msg" class="msg-box"></div>
+		<textarea id="nfqws2-editor" spellcheck="false"></textarea>
+	</div>
+</div>
+
+<!-- Logs Panel -->
+<div class="nfqws2-panel" id="panel-logs">
+	<div class="cbi-section">
+		<h3 name="content">Log Files</h3>
+		<div class="nfqws2-toolbar">
+			<select id="log-file-select" class="cbi-input-select file-select" onchange="loadLog(this.value)">
+				<option>Loading...</option>
+			</select>
+			<button class="btn cbi-button cbi-button-remove" onclick="clearLog()">Clear Log</button>
+			<button class="btn cbi-button cbi-button-reload" onclick="loadLog(currentLogFile)">Refresh</button>
+		</div>
+		<textarea id="nfqws2-log-editor" readonly spellcheck="false"></textarea>
+	</div>
+</div>
+
+<!-- Scripts Panel -->
+<div class="nfqws2-panel" id="panel-scripts">
+	<div class="cbi-section">
+		<h3 name="content">Lua Script Editor</h3>
+		<div class="nfqws2-toolbar">
+			<select id="script-select" class="cbi-input-select file-select" onchange="loadScript(this.value)">
+				<option>Loading...</option>
+			</select>
+			<button class="btn cbi-button cbi-button-add" onclick="saveScript()">Save</button>
+			<button class="btn cbi-button cbi-button-add" onclick="createScript()">Create</button>
+			<button class="btn cbi-button cbi-button-remove" onclick="removeScript()">Delete</button>
+			<span class="nfqws2-status-bar" id="script-status"></span>
+		</div>
+		<div id="script-msg" class="msg-box"></div>
+		<textarea id="nfqws2-script-editor" spellcheck="false"></textarea>
+	</div>
+</div>

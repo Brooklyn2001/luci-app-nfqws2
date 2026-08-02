@@ -12,7 +12,7 @@ define Package/luci-app-nfqws2
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
-  DEPENDS:=+luci-base +luci-lib-lua +lua +nfqws2-keenetic
+  DEPENDS:=+luci-base +nfqws2-keenetic
   PKGARCH:=all
   URL:=https://github.com/nfqws2/nfqws2-openwrt
 endef
@@ -33,12 +33,8 @@ define Package/luci-app-nfqws2/install
 	$(CP) $(PKG_BUILD_DIR)/root/* $(1)/
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
-	$(CP) $(PKG_BUILD_DIR)/luasrc/model/cbi/* $(1)/usr/lib/lua/luci/model/cbi/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(CP) $(PKG_BUILD_DIR)/luasrc/view/* $(1)/usr/lib/lua/luci/view/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	$(CP) $(PKG_BUILD_DIR)/po/* $(1)/usr/lib/lua/luci/i18n/
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/nfqws2
+	$(CP) $(PKG_BUILD_DIR)/root/usr/lib/luci/view/nfqws2/index.htm $(1)/usr/lib/lua/luci/view/nfqws2/
 	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
 	$(CP) $(PKG_BUILD_DIR)/root/usr/share/luci/menu.d/*.json $(1)/usr/share/luci/menu.d/
 	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/controller

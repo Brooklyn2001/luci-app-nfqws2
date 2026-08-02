@@ -233,6 +233,50 @@ function action_upgrade() {
 	json_response({ status: 0, output });
 }
 
+function action_uciget() {
+	const option = http.formvalue('option');
+	if (!option) {
+		json_response({ status: 1 });
+		return;
+	}
+	let f = popen(`uci get nfqws2.${option} 2>/dev/null`);
+	let val = '';
+	if (f) {
+		val = read(f)?.trim() ?? '';
+		f.close();
+	}
+	json_response({ status: 0, value: val });
+}
+
+function action_uciset() {
+	const option = http.formvalue('option');
+	const value = http.formvalue('value');
+	if (!option || value === undefined) {
+		json_response({ status: 1 });
+		return;
+	}
+	let f = popen(`uci set nfqws2.${option}='${value}' && uci commit nfqws2 2>&1`);
+	let out = '';
+	if (f) {
+		out = read(f)?.trim() ?? '';
+		f.close();
+	}
+	json_response({ status: out.length ? 1 : 0, output: out });
+}
+
+function action_ucichanges() {
+	const output = [];
+	let f = popen('uci changes nfqws2 2>&1');
+	if (f) {
+		for (let line of read(f)?.split('\n') ?? []) {
+			if (line)
+				output.push(line);
+		}
+		f.close();
+	}
+	json_response({ status: 0, changes: output });
+}
+
 return {
 	action_status,
 	action_service,
@@ -243,4 +287,7 @@ return {
 	action_removefile,
 	action_checkdomain,
 	action_upgrade,
+	action_uciget,
+	action_uciset,
+	action_ucichanges,
 };
