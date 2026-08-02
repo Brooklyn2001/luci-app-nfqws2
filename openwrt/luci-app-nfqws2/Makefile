@@ -26,26 +26,26 @@ define Build/Prepare
 endef
 
 define Build/Compile
-	# No compilation needed, just copy files
+	# No compilation needed
 endef
 
 define Package/luci-app-nfqws2/install
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
+	$(INSTALL_BIN) $(CURDIR)/src/root/etc/init.d/nfqws2 $(1)/etc/init.d/nfqws2
 	$(INSTALL_DIR) $(1)/etc/config
-	$(CP) $(PKG_BUILD_DIR)/root/etc/config/nfqws2 $(1)/etc/config/nfqws2
+	$(CP) $(CURDIR)/src/root/etc/config/nfqws2 $(1)/etc/config/nfqws2
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(CP) $(PKG_BUILD_DIR)/root/usr/lib/lua/luci/controller/nfqws2.lua $(1)/usr/lib/lua/luci/controller/
+	$(CP) $(CURDIR)/src/root/usr/lib/lua/luci/controller/nfqws2.lua $(1)/usr/lib/lua/luci/controller/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/nfqws2
-	$(CP) $(PKG_BUILD_DIR)/root/usr/lib/lua/luci/view/nfqws2/index.htm $(1)/usr/lib/lua/luci/view/nfqws2/
+	$(CP) $(CURDIR)/src/root/usr/lib/lua/luci/view/nfqws2/index.htm $(1)/usr/lib/lua/luci/view/nfqws2/
 	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/controller
-	$(CP) $(PKG_BUILD_DIR)/ucode/controller/*.uc $(1)/usr/share/ucode/luci/controller/
+	$(CP) $(CURDIR)/src/ucode/controller/*.uc $(1)/usr/share/ucode/luci/controller/
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(CP) $(PKG_BUILD_DIR)/root/usr/share/rpcd/acl.d/*.json $(1)/usr/share/rpcd/acl.d/
+	$(CP) $(CURDIR)/src/root/usr/share/rpcd/acl.d/*.json $(1)/usr/share/rpcd/acl.d/
 	$(INSTALL_DIR) $(1)/usr/share/apk/triggers
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/root/usr/share/apk/triggers/luci-app-nfqws2 $(1)/usr/share/apk/triggers/luci-app-nfqws2
+	$(INSTALL_BIN) $(CURDIR)/src/root/usr/share/apk/triggers/luci-app-nfqws2 $(1)/usr/share/apk/triggers/luci-app-nfqws2
 	$(INSTALL_DIR) $(1)/usr/share/nfqws2
-	$(CP) $(PKG_BUILD_DIR)/root/usr/share/nfqws2/generate_conf.sh $(1)/usr/share/nfqws2/
+	$(CP) $(CURDIR)/src/root/usr/share/nfqws2/generate_conf.sh $(1)/usr/share/nfqws2/
 endef
 
 define Package/luci-app-nfqws2/conffiles

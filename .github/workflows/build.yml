@@ -55,6 +55,9 @@ jobs:
           ./scripts/feeds update nfqws2
           ./scripts/feeds install -a -p nfqws2
           make defconfig
+          echo "=== PKG_BUILD_DIR contents ==="
+          find build_dir/pkginfo -name "luci-app-nfqws2*" -type d 2>/dev/null || true
+          find build_packages/luci-app-nfqws2 -type f 2>/dev/null | head -50 || true
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/luci-app-nfqws2/compile V=s
           make CONFIG_NO_STRIP=y CONFIG_USE_APK=y package/index V=s
 
