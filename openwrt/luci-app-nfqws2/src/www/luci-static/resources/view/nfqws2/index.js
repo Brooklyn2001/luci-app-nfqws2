@@ -167,7 +167,7 @@ return view.extend({
 					'rows': field.rows || 4,
 					'data-uciopt': field.opt,
 					'style': 'width:100%;font-family:monospace;font-size:13px;padding:6px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;resize:vertical;',
-					' spellcheck': 'false'
+					'spellcheck': 'false'
 				}, [val]);
 			} else {
 				return E('input', {
