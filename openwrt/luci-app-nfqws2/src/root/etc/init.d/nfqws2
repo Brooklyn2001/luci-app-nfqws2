@@ -13,6 +13,11 @@ start_service() {
 	enabled=$(uci get nfqws2.general.enabled 2>/dev/null)
 	[ "$enabled" != "1" ] && return
 
+	# Create required directories
+	mkdir -p /etc/nfqws2/lists
+	mkdir -p /etc/nfqws2/lua
+	mkdir -p /var/log
+
 	# Generate nfqws2.conf from UCI
 	if [ -x "$CONFGEN" ]; then
 		"$CONFGEN"

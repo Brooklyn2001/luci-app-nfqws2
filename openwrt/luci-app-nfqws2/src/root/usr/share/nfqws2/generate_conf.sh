@@ -16,6 +16,9 @@ uci_get_default() {
 }
 
 mkdir -p /etc/nfqws2
+mkdir -p /etc/nfqws2/lists
+mkdir -p /etc/nfqws2/lua
+mkdir -p /var/log
 
 ISP_INTERFACE=$(uci_get_default general isp_interface eth3)
 NFQWS_BASE_ARGS=$(uci_get strategies nfqws_base_args)

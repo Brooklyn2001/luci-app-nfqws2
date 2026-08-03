@@ -41,12 +41,13 @@ case "$ACTION" in
 		if [ -d "$BASE_DIR" ]; then
 			for f in "$BASE_DIR"/*; do
 				[ -f "$f" ] || continue
-				BASENAME=$(basename "$f" .gz)
+				FNAME=$(basename "$f")
+				BASENAME=$(echo "$FNAME" | sed 's/\.gz$//')
 				EXT="${BASENAME##*.}"
 				[ "$EXT" = "$BASENAME" ] && EXT=""
 				OK=0
 				[ "$FTYPE" = "conf" ] && { [ "$EXT" = "conf" ] || [ "$EXT" = "list" ] || [ "$EXT" = "txt" ]; } && OK=1
-				[ "$FTYPE" = "list" ] && [ "$EXT" = "list" ] && OK=1
+				[ "$FTYPE" = "list" ] && { [ "$EXT" = "list" ] || [ "$EXT" = "txt" ]; } && OK=1
 				[ "$FTYPE" = "lua" ] && [ "$EXT" = "lua" ] && OK=1
 				[ "$FTYPE" = "log" ] && echo "$BASENAME" | grep -q "^nfqws" && [ "$EXT" = "log" ] && OK=1
 				[ "$OK" = "1" ] && FILES="$FILES\"$BASENAME\","
